@@ -37,10 +37,10 @@
         }
 
         /// <summary>
-        /// The GetUsersByLocation.
+        /// Base Method to get users in and within a location
         /// </summary>
         /// <param name="location">The location<see cref="string"/>.</param>
-        /// <returns>The <see cref="Task{List{UserLocationDTO}}"/>.</returns>
+        /// <returns>The list of  <see cref="Task{List{UserLocationDTO}}"/>.</returns>
         public async Task<List<UserLocationDTO>> GetUsersByLocation(string location)
         {
             var response = new List<UserLocationDTO>();
@@ -53,9 +53,9 @@
         }
 
         /// <summary>
-        /// The GetUsersFromExternalSource.
+        /// Makes a GET request to the external service consumed.
         /// </summary>
-        /// <returns>The <see cref="Task{List{UserLocationDTO}}"/>.</returns>
+        /// <returns>Deserialized List of <see cref="Task{List{UserLocationDTO}}"/>.</returns>
         private async Task<List<UserLocationDTO>> GetUsersFromExternalSource()
         {
             var users = new List<UserLocationDTO>();
@@ -74,10 +74,10 @@
         }
 
         /// <summary>
-        /// The GetUsersInLondon.
+        /// Makes a GET request to an endpoint on the external service.
         /// </summary>
         /// <param name="location">The location<see cref="string"/>.</param>
-        /// <returns>The <see cref="Task{List{UserLocationDTO}}"/>.</returns>
+        /// <returns>Deserialized List of <see cref="Task{List{UserLocationDTO}}"/>.</returns>
         private async Task<List<UserLocationDTO>> GetUsersInLondon(string location)
         {
             var users = new List<UserLocationDTO>();
@@ -97,7 +97,7 @@
         }
 
         /// <summary>
-        /// The GetUsersWithinNMilesLondon.
+        /// Get users with 'N'miles. The miles is configurable on the 'app-settings.json' file
         /// </summary>
         /// <param name="usersMarkedAsInLondon">The usersMarkedAsInLondon<see cref="List{UserLocationDTO}"/>.</param>
         /// <returns>The <see cref="Task{List{UserLocationDTO}}"/>.</returns>
@@ -107,14 +107,23 @@
             try
             {
                 var allUsers = await GetUsersFromExternalSource();
-                var otherUsers = allUsers.Where(c => usersMarkedAsInLondon.All(k => k.id != c.id));
-                foreach (var user in otherUsers)
-                {
-                    if (CalculateDistance(_externalServiceSettings.LatitudeOfLondon, double.Parse(user.latitude), _externalServiceSettings.LongitudeOfLondon, double.Parse(user.longitude)) <= _externalServiceSettings.MilesAverage)
-                    {
-                        users.Add(user);
-                    }
-                }
+                var otherUsers = allUsers
+                    .Where(c => usersMarkedAsInLondon
+                    .All(k => k.id != c.id) &&
+                    CalculateDistance(_externalServiceSettings.LatitudeOfLondon,
+                                      double.Parse(c.latitude),
+                                      _externalServiceSettings.LongitudeOfLondon,
+                                      double.Parse(c.longitude))
+                    <= _externalServiceSettings.MilesAverage);
+                users.AddRange(otherUsers);
+                //foreach (var user in otherUsers)
+                //{
+                //    users.Add(user);
+                //    //if (CalculateDistance(_externalServiceSettings.LatitudeOfLondon, double.Parse(user.latitude), _externalServiceSettings.LongitudeOfLondon, double.Parse(user.longitude)) <= _externalServiceSettings.MilesAverage)
+                //    //{
+                //    //    users.Add(user);
+                //    //}
+                //}
 
             }
             catch (Exception ex)
@@ -138,7 +147,7 @@
         }
 
         /// <summary>
-        /// The CalculateDistance.
+        /// The Calculates the distance between two points in miles.
         /// </summary>
         /// <param name="pointALatitude">The pointALatitude<see cref="double"/>.</param>
         /// <param name="pointBLatitude">The pointBLatitude<see cref="double"/>.</param>
@@ -164,7 +173,7 @@
         }
 
         /// <summary>
-        /// The CalculateUsingHaversineFormular.
+        ///  Calculate Using Haversine Formular. The haversine formula determines the great-circle distance between two points on a sphere given their longitudes and latitudes.
         /// </summary>
         /// <param name="pointALatitude">The pointALatitude<see cref="double"/>.</param>
         /// <param name="pointBLatitude">The pointBLatitude<see cref="double"/>.</param>
