@@ -20,8 +20,8 @@ namespace LocationService.WebApi.Extensions
                     Contact = new OpenApiContact
                     {
                         Name = "Ikemefuna Anthony",
-                        Email = "anthony.ikemefuna@thokemgroup.com",
-                        Url = new Uri("http://portfolio.thokemgroup.com"),
+                        Email = "aikemefuna@gmail.com",
+                        Url = new Uri("http://portfolio.thokemgroup.com.ng"),
                     }
                 });
                 //c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

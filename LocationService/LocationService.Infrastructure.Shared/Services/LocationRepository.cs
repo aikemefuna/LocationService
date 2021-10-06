@@ -40,15 +40,15 @@
         /// Base Method to get users in and within a location
         /// </summary>
         /// <param name="location">The location<see cref="string"/>.</param>
-        /// <returns>The list of  <see cref="Task{List{UserLocationDTO}}"/>.</returns>
+        /// <returns>The List<userLocationDTO> <see cref="Task{List{UserLocationDTO}}"/>.</returns>
         public async Task<List<UserLocationDTO>> GetUsersByLocation(string location)
         {
             var response = new List<UserLocationDTO>();
             //get users listed in london from the external service
-            var usersInLondon = await GetUsersInLondon(location);
-            var usersWithinNRangeOfMilesFromLondon = await GetUsersWithinNMilesLondon(usersInLondon);
-            response.AddRange(usersInLondon);
-            response.AddRange(usersWithinNRangeOfMilesFromLondon);
+            var usersFromLocationPassed = await GetUsersFromNLocation(location);
+            var usersWithinNRangeOfMilesFromCordinatesPassed = await GetUsersWithinNMilesFromCordinatesPassed(usersFromLocationPassed);
+            response.AddRange(usersFromLocationPassed);
+            response.AddRange(usersWithinNRangeOfMilesFromCordinatesPassed);
             return response;
         }
 
@@ -78,7 +78,7 @@
         /// </summary>
         /// <param name="location">The location<see cref="string"/>.</param>
         /// <returns>Deserialized List of <see cref="Task{List{UserLocationDTO}}"/>.</returns>
-        private async Task<List<UserLocationDTO>> GetUsersInLondon(string location)
+        private async Task<List<UserLocationDTO>> GetUsersFromNLocation(string location)
         {
             var users = new List<UserLocationDTO>();
             try
@@ -97,24 +97,30 @@
         }
 
         /// <summary>
-        /// Get users with 'N'miles. The miles is configurable on the 'app-settings.json' file
+        /// Get users within 'N' miles. The miles is configurable on the 'app-settings.json' file
         /// </summary>
-        /// <param name="usersMarkedAsInLondon">The usersMarkedAsInLondon<see cref="List{UserLocationDTO}"/>.</param>
+        /// <param name="userWithCityAsLocationPassed">The users with city as London Retrieved From The '/city/{city}/users'<see cref="List{UserLocationDTO}"/>.</param>
         /// <returns>The <see cref="Task{List{UserLocationDTO}}"/>.</returns>
-        private async Task<List<UserLocationDTO>> GetUsersWithinNMilesLondon(List<UserLocationDTO> usersMarkedAsInLondon)
+        private async Task<List<UserLocationDTO>> GetUsersWithinNMilesFromCordinatesPassed(List<UserLocationDTO> userWithCityAsLocationPassed)
         {
             var users = new List<UserLocationDTO>();
             try
             {
+                //All users from the /users endpoint
                 var allUsers = await GetUsersFromExternalSource();
+
+                //Users from 'allUsers' and not in 'usersMarkedAsInLondon' from the param.
+                //Users filtered by 50 miles from London. Please see the configurations on the app-setting.json file
                 var otherUsers = allUsers
-                    .Where(c => usersMarkedAsInLondon
+                    .Where(c => userWithCityAsLocationPassed
                     .All(k => k.id != c.id) &&
-                    CalculateDistance(_externalServiceSettings.LatitudeOfLondon,
+                    CalculateDistance(_externalServiceSettings.Latitude,
                                       double.Parse(c.latitude),
-                                      _externalServiceSettings.LongitudeOfLondon,
+                                      _externalServiceSettings.Longitude,
                                       double.Parse(c.longitude))
                     <= _externalServiceSettings.MilesAverage);
+
+
                 users.AddRange(otherUsers);
                 //foreach (var user in otherUsers)
                 //{
@@ -156,13 +162,14 @@
         /// <returns>The <see cref="double"/>.</returns>
         private double CalculateDistance(double pointALatitude, double pointBLatitude, double pointALongitude, double pointBLongitude)
         {
+            //converts to Radian
             pointALatitude = ToRadian(pointALatitude);
             pointBLatitude = ToRadian(pointBLatitude);
             pointALongitude = ToRadian(pointALongitude);
             pointBLongitude = ToRadian(pointBLongitude);
 
             // using the Haversine formula
-            double result = CalculateUsingHaversineFormular(pointALatitude, pointBLatitude, pointALongitude, pointBLongitude);
+            double result = CalculateUsingHaversineFormular(pointALatitude, pointBLatitude, pointALongitude, pointBLongitude);  //pointALatitude and pointBLongitude indicates the cordinates for London. Please see the app-setting.json file
 
             double angle = 2 * Math.Asin(Math.Sqrt(result));
 

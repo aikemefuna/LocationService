@@ -11,25 +11,28 @@ using System.Threading.Tasks;
 
 namespace LocationService.Application.Features.Location.Queries
 {
-    public class GetUsersInLondAndWithinNMilesQuery : IRequest<Response<List<UserLocationDTO>>>
+    public class GetUsersInLondonAndWithinNMilesQuery : IRequest<Response<List<UserLocationDTO>>>
     {
 
     }
-    public class GetUsersInLondAndWithinNMilesQueryHandler : IRequestHandler<GetUsersInLondAndWithinNMilesQuery, Response<List<UserLocationDTO>>>
+    public class GetUsersInLondonAndWithinNMilesQueryHandler : IRequestHandler<GetUsersInLondonAndWithinNMilesQuery, Response<List<UserLocationDTO>>>
     {
         private readonly ILocationRepository _locationRepository;
         private readonly ExternalServiceSetting _externalServiceSettings;
 
-        public GetUsersInLondAndWithinNMilesQueryHandler(ILocationRepository locationRepository, IOptions<ExternalServiceSetting> externalServiceSettings)
+        public GetUsersInLondonAndWithinNMilesQueryHandler(ILocationRepository locationRepository, IOptions<ExternalServiceSetting> externalServiceSettings)
         {
             _locationRepository = locationRepository;
             _externalServiceSettings = externalServiceSettings.Value;
         }
-        public async Task<Response<List<UserLocationDTO>>> Handle(GetUsersInLondAndWithinNMilesQuery request, CancellationToken cancellationToken)
+        public async Task<Response<List<UserLocationDTO>>> Handle(GetUsersInLondonAndWithinNMilesQuery request, CancellationToken cancellationToken)
         {
             var response = new Response<List<UserLocationDTO>>();
+
             try
             {
+                response.Succeeded = true;
+                response.Message = $"Users who are listed as either living in {_externalServiceSettings.Location} retrieved or whose current coordinates are within 50 miles of {_externalServiceSettings.Location}";
                 var usersResponse = await _locationRepository.GetUsersByLocation(_externalServiceSettings.Location);
                 response.Data = usersResponse;
             }

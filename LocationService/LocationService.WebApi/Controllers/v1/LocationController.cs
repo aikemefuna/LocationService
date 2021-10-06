@@ -14,7 +14,7 @@ namespace LocationService.WebApi.Controllers.v1
         [ProducesResponseType(typeof(Response<List<UserLocationDTO>>), 200)]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await Mediator.Send(new GetUsersInLondAndWithinNMilesQuery() { }));
+            return Ok(await Mediator.Send(new GetUsersInLondonAndWithinNMilesQuery() { }));
         }
     }
 }
